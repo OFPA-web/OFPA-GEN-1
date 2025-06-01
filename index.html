@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8" />
     <title>OFPA Chat</title>
+
+    <!-- Prism.js CSS for syntax highlighting -->
+    <link href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+
     <style>
         * {
-          border: 0;
           box-sizing: border-box;
           margin: 0;
           padding: 0;
@@ -23,9 +26,10 @@
         header {
           padding: 1em;
           text-align: center;
-          font-size: 1.5em;
+          font-size: 1.8em;
           font-weight: bold;
           background-color: #111;
+          border-bottom: 1px solid #444;
         }
 
         .chat-container {
@@ -43,6 +47,13 @@
           padding: 0.75em 1em;
           border-radius: 1em;
           word-wrap: break-word;
+          line-height: 1.4em;
+          animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
 
         .user {
@@ -57,101 +68,76 @@
 
         .search-bar {
           display: flex;
-          justify-content: center;
-          padding: 1.5em;
+          padding: 1em;
           background: #2e2e2e;
           border-top: 1px solid #444;
         }
 
-        .search-bar input,
-        .search-btn,
-        .search-btn:before,
-        .search-btn:after {
-          transition: all 0.25s ease-out;
-        }
-
-        .search-bar input,
-        .search-btn {
-          width: 3em;
-          height: 3em;
-        }
-
         .search-bar input {
-          background: transparent;
-          border-radius: 1.5em;
-          box-shadow: 0 0 0 0.4em #f1f1f1 inset;
+          flex: 1;
           padding: 0.75em;
-          transform: translate(0.5em, 0.5em) scale(0.5);
-          transform-origin: 100% 0;
-          appearance: none;
-          color: #f1f1f1;
+          border-radius: 0.5em;
+          border: none;
+          outline: none;
+          font-size: 1em;
+          background: #444;
+          color: #fff;
+          margin-right: 0.5em;
         }
 
-        .search-bar input:focus,
-        .search-bar input:valid {
-          background: #3d3d3d;
-          border-radius: 0.375em 0 0 0.375em;
-          box-shadow: 0 0 0 0.1em #3d3d3d inset;
-          transform: scale(1);
-          width: 100%;
-        }
-
-        .search-btn {
-          background: #f1f1f1;
-          border-radius: 0 0.75em 0.75em 0 / 0 1.5em 1.5em 0;
-          padding: 0.75em;
-          position: relative;
-          transform: translate(0.25em, 0.25em) rotate(45deg) scale(0.25, 0.125);
-          transform-origin: 0 50%;
-        }
-
-        .search-btn:before,
-        .search-btn:after {
-          content: "";
-          display: block;
-          opacity: 0;
-          position: absolute;
-        }
-
-        .search-btn:before {
-          border-radius: 50%;
-          box-shadow: 0 0 0 0.2em #1e1e1e inset;
-          top: 0.75em;
-          left: 0.75em;
-          width: 1.2em;
-          height: 1.2em;
-        }
-
-        .search-btn:after {
-          background: #1e1e1e;
-          border-radius: 0 0.25em 0.25em 0;
-          top: 51%;
-          left: 51%;
-          width: 0.75em;
-          height: 0.25em;
-          transform: translate(0.2em, 0) rotate(45deg);
-          transform-origin: 0 50%;
-        }
-
-        .search-bar input:focus + .search-btn,
-        .search-bar input:valid + .search-btn {
+        .search-bar button {
+          padding: 0.75em 1em;
+          border: none;
+          border-radius: 0.5em;
           background: #2762f3;
-          border-radius: 0 0.375em 0.375em 0;
-          transform: scale(1);
+          color: #fff;
+          font-weight: bold;
+          cursor: pointer;
+          transition: background 0.3s;
         }
 
-        .search-bar input:focus + .search-btn:before,
-        .search-bar input:focus + .search-btn:after,
-        .search-bar input:valid + .search-btn:before,
-        .search-bar input:valid + .search-btn:after {
-          opacity: 1;
+        .search-bar button:hover {
+          background: #1946c1;
         }
 
-        .search-btn span {
-          display: inline-block;
-          overflow: hidden;
-          width: 1px;
-          height: 1px;
+        .typing {
+          font-style: italic;
+          color: #aaa;
+          margin-top: 0.25em;
+        }
+
+        /* Copy button styling */
+        .copy-btn {
+         margin-top: 5px;
+         background: white;      /* White background */
+         border: none;           /* No border */
+         color: #2762f3;         /* Blue text (or any visible color you want) */
+         padding: 6px 12px;
+         border-radius: 5px;
+         cursor: pointer;
+         font-size: 0.9em;
+         transition: background 0.3s, color 0.3s;
+          user-select: none;
+          box-shadow: none;       /* Remove any shadow if present */
+}
+
+          .copy-btn:hover {
+           background: #ddd;       /* Light grey on hover */
+           color: #1946c1;         /* Darker blue on hover */
+}
+
+
+        /* Make code block text smaller and better spaced */
+        pre {
+          background: #2d2d2d;
+          padding: 1em;
+          border-radius: 8px;
+          overflow-x: auto;
+          font-size: 0.9em;
+          line-height: 1.3em;
+          margin-top: 0.5em;
+          white-space: pre-wrap; /* wrap lines */
+          word-break: break-word;
         }
     </style>
 </head>
@@ -164,9 +150,13 @@
 </div>
 
 <form class="search-bar" id="searchForm">
-    <input type="search" name="search" required placeholder="Ask something like 'factorial program'..." />
-    <button class="search-btn" type="submit"><span>Search</span></button>
+    <input type="search" name="search" required placeholder="e.g. factorial program" autocomplete="off" />
+    <button type="submit">Ask</button>
 </form>
+
+<!-- Prism.js -->
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/components/prism-java.min.js"></script>
 
 <script>
     const form = document.getElementById("searchForm");
@@ -175,251 +165,152 @@
 
     function ofpaBot(question) {
       const q = question.toLowerCase();
-
       const programs = {
-        "add": `Program to Add Two Numbers:
-import java.util.*;
-public class Add {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int a = sc.nextInt(), b = sc.nextInt();
-    System.out.println("Sum: " + (a + b));
-  }
-}`,
+  "add": `Program to Add Two Numbers:\nimport java.util.*;\npublic class Add {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt();\n    System.out.println("Sum: " + (a + b));\n  }\n}`,
 
-        "factorial": `Factorial Program:
-import java.util.*;
-public class Factorial {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), fact = 1;
-    for(int i=1;i<=n;i++) fact *= i;
-    System.out.println("Factorial: " + fact);
-  }
-}`,
+  "factorial": `Factorial Program:\nimport java.util.*;\npublic class Factorial {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), fact = 1;\n    for(int i=1;i<=n;i++) fact *= i;\n    System.out.println("Factorial: " + fact);\n  }\n}`,
 
-        "prime": `Prime Number Check:
-import java.util.*;
-public class PrimeCheck {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), c = 0;
-    for(int i=2;i<=n/2;i++) if(n%i==0) c++;
-    System.out.println(c==0 ? "Prime" : "Not Prime");
-  }
-}`,
+  "prime": `Prime Number Check:\nimport java.util.*;\npublic class PrimeCheck {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), c = 0;\n    for(int i=2;i<=n/2;i++) if(n%i==0) c++;\n    System.out.println(c==0 ? "Prime" : "Not Prime");\n  }\n}`,
 
-        "even odd": `Even or Odd:
-import java.util.*;
-public class EvenOdd {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt();
-    System.out.println(n%2==0 ? "Even" : "Odd");
-  }
-}`,
+  "even odd": `Even or Odd:\nimport java.util.*;\npublic class EvenOdd {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    System.out.println(n%2==0 ? "Even" : "Odd");\n  }\n}`,
 
-        "reverse number": `Reverse a Number:
-import java.util.*;
-public class Reverse {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), rev = 0;
-    while(n != 0) {
-      rev = rev*10 + n%10;
-      n /= 10;
-    }
-    System.out.println("Reverse: " + rev);
-  }
-}`,
+  "reverse number": `Reverse a Number:\nimport java.util.*;\npublic class Reverse {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), rev = 0;\n    while(n != 0) {\n      rev = rev*10 + n%10;\n      n /= 10;\n    }\n    System.out.println("Reverse: " + rev);\n  }\n}`,
 
-        "palindrome": `Palindrome Number:
-import java.util.*;
-public class Palindrome {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), r = 0, temp = n;
-    while(n != 0) {
-      r = r*10 + n%10;
-      n /= 10;
-    }
-    System.out.println(r == temp ? "Palindrome" : "Not Palindrome");
-  }
-}`,
+  "palindrome": `Palindrome Number:\nimport java.util.*;\npublic class Palindrome {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), r = 0, temp = n;\n    while(n != 0) {\n      r = r*10 + n%10;\n      n /= 10;\n    }\n    System.out.println(r == temp ? "Palindrome" : "Not Palindrome");\n  }\n}`,
 
-        "armstrong": `Armstrong Number:
-import java.util.*;
-public class Armstrong {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), sum = 0, temp = n;
-    while(n != 0) {
-      int d = n%10;
-      sum += d*d*d;
-      n /= 10;
-    }
-    System.out.println(sum == temp ? "Armstrong" : "Not Armstrong");
-  }
-}`,
+  "armstrong": `Armstrong Number:\nimport java.util.*;\npublic class Armstrong {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), sum = 0, temp = n;\n    while(n != 0) {\n      int d = n%10;\n      sum += d*d*d;\n      n /= 10;\n    }\n    System.out.println(sum == temp ? "Armstrong" : "Not Armstrong");\n  }\n}`,
 
-        "table": `Multiplication Table:
-import java.util.*;
-public class Table {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt();
-    for(int i=1;i<=10;i++) System.out.println(n + " x " + i + " = " + (n*i));
-  }
-}`,
+  "table": `Multiplication Table:\nimport java.util.*;\npublic class Table {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    for(int i=1;i<=10;i++) System.out.println(n + " x " + i + " = " + (n*i));\n  }\n}`,
 
-        "voting": `Voting Eligibility:
-import java.util.*;
-public class Vote {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int age = sc.nextInt();
-    System.out.println(age >= 18 ? "Eligible" : "Not Eligible");
-  }
-}`,
+  "voting": `Voting Eligibility:\nimport java.util.*;\npublic class Vote {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int age = sc.nextInt();\n    System.out.println(age >= 18 ? "Eligible" : "Not Eligible");\n  }\n}`,
 
-        "greatest": `Greatest of 3 Numbers:
-import java.util.*;
-public class Greatest {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int a = sc.nextInt(), b = sc.nextInt(), c = sc.nextInt();
-    System.out.println("Greatest: " + Math.max(a, Math.max(b, c)));
-  }
-}`,
+  "greatest": `Greatest of 3 Numbers:\nimport java.util.*;\npublic class Greatest {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt(), c = sc.nextInt();\n    System.out.println("Greatest: " + Math.max(a, Math.max(b, c)));\n  }\n}`,
 
-        "taxi": `Taxi Fare Calculator:
-import java.util.*;
-public class Taxi {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    double d = sc.nextDouble(), fare;
-    if(d < 5) fare = 10;
-    else if(d <= 15) fare = 10*d;
-    else if(d <= 30) fare = 8*d;
-    else fare = 5*d;
-    System.out.println("Fare: " + fare);
-  }
-}`,
+  "taxi": `Taxi Fare Calculator:\nimport java.util.*;\npublic class Taxi {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    double d = sc.nextDouble(), fare;\n    if(d < 5) fare = 10;\n    else if(d <= 15) fare = 10*d;\n    else if(d <= 30) fare = 8*d;\n    else fare = 5*d;\n    System.out.println("Fare: " + fare);\n  }\n}`,
 
-        "rectangle": `Rectangle Area & Perimeter:
-import java.util.*;
-public class Rectangle {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    double l = sc.nextDouble(), b = sc.nextDouble();
-    System.out.println("Area: " + (l*b));
-    System.out.println("Perimeter: " + (2*(l+b)));
-  }
-}`,
+  "rectangle": `Rectangle Area & Perimeter:\nimport java.util.*;\npublic class Rectangle {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    double l = sc.nextDouble(), b = sc.nextDouble();\n    System.out.println("Area: " + (l*b));\n    System.out.println("Perimeter: " + (2*(l+b)));\n  }\n}`,
 
-        "square": `Square Area & Perimeter:
-import java.util.*;
-public class Square {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    double s = sc.nextDouble();
-    System.out.println("Area: " + (s*s));
-    System.out.println("Perimeter: " + (4*s));
-  }
-}`,
+  "square": `Square Area & Perimeter:\nimport java.util.*;\npublic class Square {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    double s = sc.nextDouble();\n    System.out.println("Area: " + (s*s));\n    System.out.println("Perimeter: " + (4*s));\n  }\n}`,
 
-        "circle": `Circle Area & Circumference:
-import java.util.*;
-public class Circle {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    double r = sc.nextDouble();
-    System.out.println("Area: " + (3.14*r*r));
-    System.out.println("Circumference: " + (2*3.14*r));
-  }
-}`,
+  "circle": `Circle Area & Circumference:\nimport java.util.*;\npublic class Circle {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    double r = sc.nextDouble();\n    System.out.println("Area: " + (3.14*r*r));\n    System.out.println("Circumference: " + (2*3.14*r));\n  }\n}`,
 
-        "leap": `Leap Year Check:
-import java.util.*;
-public class LeapYear {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int y = sc.nextInt();
-    System.out.println((y%4==0 && y%100!=0) || y%400==0 ? "Leap Year" : "Not Leap");
-  }
-}`,
+  "leap": `Leap Year Check:\nimport java.util.*;\npublic class LeapYear {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int y = sc.nextInt();\n    System.out.println((y%4==0 && y%100!=0) || y%400==0 ? "Leap Year" : "Not Leap");\n  }\n}`,
 
-        "swap": `Swap Two Numbers:
-import java.util.*;
-public class Swap {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int a = sc.nextInt(), b = sc.nextInt();
-    int temp = a; a = b; b = temp;
-    System.out.println("a = " + a + ", b = " + b);
-  }
-}`,
+  "swap": `Swap Two Numbers:\nimport java.util.*;\npublic class Swap {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt();\n    int temp = a; a = b; b = temp;\n    System.out.println("a = " + a + ", b = " + b);\n  }\n}`,
 
-        "sum digits": `Sum of Digits:
-import java.util.*;
-public class DigitSum {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    int n = sc.nextInt(), sum = 0;
-    while(n != 0) {
-      sum += n % 10;
-      n /= 10;
-    }
-    System.out.println("Sum: " + sum);
-  }
-}`,
+  "sum digits": `Sum of Digits:\nimport java.util.*;\npublic class DigitSum {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), sum = 0;\n    while(n != 0) {\n      sum += n % 10;\n      n /= 10;\n    }\n    System.out.println("Sum: " + sum);\n  }\n}`,
 
-        "ascii": `ASCII Value:
-import java.util.*;
-public class Ascii {
-  public static void main(String[] args) {
-    Scanner sc = new Scanner(System.in);
-    char ch = sc.next().charAt(0);
-    System.out.println("ASCII: " + (int)ch);
-  }
-}`,
+  "ascii": `ASCII Value:\nimport java.util.*;\npublic class Ascii {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    char ch = sc.next().charAt(0);\n    System.out.println("ASCII: " + (int)ch);\n  }\n}`,
 
-        "hello": `Simple Hello:
-public class Hello {
-  public static void main(String[] args) {
-    System.out.println("Hello World!");
-  }
-}`
-      };
+  "hello": `Simple Hello:\npublic class Hello {\n  public static void main(String[] args) {\n    System.out.println("Hello World!");\n  }\n}`,
 
-      for (const key in programs) {
-        if (q.includes(key)) {
-          return `<pre>${programs[key]}</pre>`;
+  // Additional 30 programs start here:
+
+  "fibonacci": `Fibonacci Series:\nimport java.util.*;\npublic class Fibonacci {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int a = 0, b = 1;\n    System.out.print(a + " " + b);\n    for(int i = 2; i < n; i++) {\n      int c = a + b;\n      System.out.print(" " + c);\n      a = b;\n      b = c;\n    }\n  }\n}`,
+
+  "count digits": `Count Digits:\nimport java.util.*;\npublic class CountDigits {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), count = 0;\n    while(n != 0) {\n      n /= 10;\n      count++;\n    }\n    System.out.println("Digits: " + count);\n  }\n}`,
+
+  "perfect number": `Perfect Number:\nimport java.util.*;\npublic class Perfect {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt(), sum = 0;\n    for(int i = 1; i <= n/2; i++) {\n      if(n % i == 0) sum += i;\n    }\n    System.out.println(sum == n ? "Perfect" : "Not Perfect");\n  }\n}`,
+
+  "hcf": `HCF of Two Numbers:\nimport java.util.*;\npublic class HCF {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt();\n    while(b != 0) {\n      int t = b;\n      b = a % b;\n      a = t;\n    }\n    System.out.println("HCF: " + a);\n  }\n}`,
+
+  "lcm": `LCM of Two Numbers:\nimport java.util.*;\npublic class LCM {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt();\n    int lcm = (a * b) / gcd(a, b);\n    System.out.println("LCM: " + lcm);\n  }\n  public static int gcd(int a, int b) {\n    while(b != 0) {\n      int t = b;\n      b = a % b;\n      a = t;\n    }\n    return a;\n  }\n}`,
+
+  "binary to decimal": `Binary to Decimal:\nimport java.util.*;\npublic class BinToDec {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    String bin = sc.next();\n    int dec = Integer.parseInt(bin, 2);\n    System.out.println("Decimal: " + dec);\n  }\n}`,
+
+  "decimal to binary": `Decimal to Binary:\nimport java.util.*;\npublic class DecToBin {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int dec = sc.nextInt();\n    System.out.println("Binary: " + Integer.toBinaryString(dec));\n  }\n}`,
+
+  "sort array": `Sort an Array:\nimport java.util.*;\npublic class SortArray {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int[] a = new int[n];\n    for(int i=0;i<n;i++) a[i] = sc.nextInt();\n    Arrays.sort(a);\n    System.out.println("Sorted: " + Arrays.toString(a));\n  }\n}`,
+
+  "reverse array": `Reverse an Array:\nimport java.util.*;\npublic class ReverseArray {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int[] a = new int[n];\n    for(int i=0;i<n;i++) a[i] = sc.nextInt();\n    for(int i = n - 1; i >= 0; i--) System.out.print(a[i] + " ");\n  }\n}`,
+
+  "matrix addition": `Matrix Addition:\nimport java.util.*;\npublic class MatrixAdd {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int r = sc.nextInt(), c = sc.nextInt();\n    int[][] a = new int[r][c];\n    int[][] b = new int[r][c];\n    for(int i=0;i<r;i++)\n      for(int j=0;j<c;j++) a[i][j] = sc.nextInt();\n    for(int i=0;i<r;i++)\n      for(int j=0;j<c;j++) b[i][j] = sc.nextInt();\n    int[][] sum = new int[r][c];\n    for(int i=0;i<r;i++)\n      for(int j=0;j<c;j++) sum[i][j] = a[i][j] + b[i][j];\n    for(int i=0;i<r;i++) {\n      for(int j=0;j<c;j++) System.out.print(sum[i][j] + " ");\n      System.out.println();\n    }\n  }\n}`,
+
+  "matrix multiplication": `Matrix Multiplication:\nimport java.util.*;\npublic class MatrixMul {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int r1 = sc.nextInt(), c1 = sc.nextInt();\n    int r2 = sc.nextInt(), c2 = sc.nextInt();\n    if(c1 != r2) {\n      System.out.println("Cannot multiply");\n      return;\n    }\n    int[][] a = new int[r1][c1];\n    int[][] b = new int[r2][c2];\n    for(int i=0;i<r1;i++)\n      for(int j=0;j<c1;j++) a[i][j] = sc.nextInt();\n    for(int i=0;i<r2;i++)\n      for(int j=0;j<c2;j++) b[i][j] = sc.nextInt();\n    int[][] mul = new int[r1][c2];\n    for(int i=0;i<r1;i++) {\n      for(int j=0;j<c2;j++) {\n        for(int k=0;k<c1;k++) mul[i][j] += a[i][k] * b[k][j];\n      }\n    }\n    for(int i=0;i<r1;i++) {\n      for(int j=0;j<c2;j++) System.out.print(mul[i][j] + " ");\n      System.out.println();\n    }\n  }\n}`,
+
+  "decimal to octal": `Decimal to Octal:\nimport java.util.*;\npublic class DecToOct {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int dec = sc.nextInt();\n    System.out.println("Octal: " + Integer.toOctalString(dec));\n  }\n}`,
+
+  "octal to decimal": `Octal to Decimal:\nimport java.util.*;\npublic class OctToDec {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    String oct = sc.next();\n    int dec = Integer.parseInt(oct, 8);\n    System.out.println("Decimal: " + dec);\n  }\n}`,
+
+  "ascii to char": `ASCII to Character:\nimport java.util.*;\npublic class AsciiToChar {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int val = sc.nextInt();\n    System.out.println("Char: " + (char)val);\n  }\n}`,
+
+  "swap without temp": `Swap without Temp Variable:\nimport java.util.*;\npublic class SwapNoTemp {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int a = sc.nextInt(), b = sc.nextInt();\n    a = a + b;\n    b = a - b;\n    a = a - b;\n    System.out.println("a = " + a + ", b = " + b);\n  }\n}`,
+
+  "sum of natural numbers": `Sum of First N Natural Numbers:\nimport java.util.*;\npublic class SumNatural {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int sum = n * (n + 1) / 2;\n    System.out.println("Sum: " + sum);\n  }\n}`,
+
+  "binary search": `Binary Search in Array:\nimport java.util.*;\npublic class BinarySearch {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int[] arr = new int[n];\n    for(int i=0;i<n;i++) arr[i] = sc.nextInt();\n    Arrays.sort(arr);\n    int key = sc.nextInt();\n    int left = 0, right = n-1, mid;\n    boolean found = false;\n    while(left <= right) {\n      mid = (left + right) / 2;\n      if(arr[mid] == key) {\n        found = true;\n        break;\n      } else if(arr[mid] < key) left = mid + 1;\n      else right = mid - 1;\n    }\n    System.out.println(found ? "Found" : "Not Found");\n  }\n}`,
+
+  "decimal to hexadecimal": `Decimal to Hexadecimal:\nimport java.util.*;\npublic class DecToHex {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int dec = sc.nextInt();\n    System.out.println("Hexadecimal: " + Integer.toHexString(dec));\n  }\n}`,
+
+  "hexadecimal to decimal": `Hexadecimal to Decimal:\nimport java.util.*;\npublic class HexToDec {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    String hex = sc.next();\n    int dec = Integer.parseInt(hex, 16);\n    System.out.println("Decimal: " + dec);\n  }\n}`,
+
+  "check vowel": `Check Vowel:\nimport java.util.*;\npublic class CheckVowel {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    char ch = sc.next().charAt(0);\n    if(\"aeiouAEIOU\".indexOf(ch) != -1) System.out.println(\"Vowel\");\n    else System.out.println(\"Not Vowel\");\n  }\n}`,
+
+  "sum of array": `Sum of Array Elements:\nimport java.util.*;\npublic class SumArray {\n  public static void main(String[] args) {\n    Scanner sc = new Scanner(System.in);\n    int n = sc.nextInt();\n    int[] a = new int[n];\n    int sum = 0;\n    for(int i=0;i<n;i++) {\n      a[i] = sc.nextInt();\n      sum += a[i];\n    }\n    System.out.println(\"Sum: \" + sum);\n  }\n}`
+};
+
+
+      // Find key in programs that matches question keywords
+      for(let key in programs) {
+        if(q.includes(key)) {
+          // Remove the initial line break and label from string
+          let code = programs[key].split('\n').slice(1).join('\n');
+          // Return code wrapped in pre/code + copy button
+          return `<pre><code class="language-java">${code}</code></pre><button class="copy-btn">Copy Code</button>`;
         }
       }
+      return "Sorry, I don't have a program for that. Try asking something else!";
+    }
 
-      return `⚠️ ERROR: Sorry! I don’t have that program yet. Try asking something like “factorial”, “reverse number”, or “ASCII”.`;
+    function createMessageElement(text, sender = "bot") {
+      const div = document.createElement("div");
+      div.classList.add("message", sender);
+      if(sender === "bot" && text.startsWith("<pre>")) {
+        // Insert as HTML (code block + button)
+        div.innerHTML = text;
+        Prism.highlightAll(); // Highlight syntax after insertion
+      } else {
+        div.textContent = text;
+      }
+      return div;
     }
 
     form.addEventListener("submit", function(e) {
       e.preventDefault();
-      const question = input.value.trim();
-      if (question === "") return;
-
-      const userMsg = document.createElement("div");
-      userMsg.classList.add("message", "user");
-      userMsg.textContent = question;
-      chatContainer.appendChild(userMsg);
-
-      const botMsg = document.createElement("div");
-      botMsg.classList.add("message", "bot");
-      botMsg.innerHTML = ofpaBot(question);
-      setTimeout(() => {
-        chatContainer.appendChild(botMsg);
-        chatContainer.scrollTop = chatContainer.scrollHeight;
-      }, 300);
-
+      const userInput = input.value.trim();
+      if(!userInput) return;
+      // Show user message
+      chatContainer.appendChild(createMessageElement(userInput, "user"));
       input.value = "";
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      // Show bot typing
+      const typingMsg = createMessageElement("Typing...", "bot");
+      typingMsg.classList.add("typing");
+      chatContainer.appendChild(typingMsg);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
+
+      setTimeout(() => {
+        chatContainer.removeChild(typingMsg);
+        const botReply = ofpaBot(userInput);
+        chatContainer.appendChild(createMessageElement(botReply, "bot"));
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      }, 1200);
+    });
+
+    // Copy button event listener
+    chatContainer.addEventListener('click', function(e) {
+      if(e.target.classList.contains('copy-btn')) {
+        const codeBlock = e.target.previousElementSibling.querySelector('code');
+        if(codeBlock) {
+          navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+            e.target.textContent = 'Copied!';
+            setTimeout(() => {
+              e.target.textContent = 'Copy Code';
+            }, 1500);
+          });
+        }
+      }
     });
 </script>
 
